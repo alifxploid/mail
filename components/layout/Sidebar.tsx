@@ -2,6 +2,12 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   Sidebar,
   SidebarContent,
@@ -24,7 +30,12 @@ import {
   Archive, 
   Trash2,
   Activity,
-  Database
+  Database,
+  Wrench,
+  Bot,
+  Zap,
+  Shield,
+  ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -52,16 +63,26 @@ const navigationItems = [
   },
 ];
 
-const quickActions = [
+const toolsItems = [
   {
-    title: 'Generate Email',
-    url: '/#generator',
-    icon: Mail,
+    title: 'AI Generator',
+    icon: Bot,
+    action: () => console.log('AI Generator clicked'),
+  },
+  {
+    title: 'Quick Actions',
+    icon: Zap,
+    action: () => console.log('Quick Actions clicked'),
+  },
+  {
+    title: 'Security Tools',
+    icon: Shield,
+    action: () => console.log('Security Tools clicked'),
   },
   {
     title: 'Settings',
-    url: '/settings',
     icon: Settings,
+    action: () => window.location.href = '/settings',
   },
 ];
 
@@ -100,19 +121,34 @@ export function AppSidebar() {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {quickActions.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url} className="flex items-center gap-3">
-                      <item.icon className="h-5 w-5" />
-                      <span className="text-base">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton className="flex items-center gap-3 w-full justify-between">
+                      <div className="flex items-center gap-3">
+                        <Wrench className="h-5 w-5" />
+                        <span className="text-base">Tools</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {toolsItems.map((item) => (
+                      <DropdownMenuItem 
+                        key={item.title}
+                        onClick={item.action}
+                        className="flex items-center gap-3 cursor-pointer"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
