@@ -4,7 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, Copy, Shield, Clock, Zap, CheckCircle, RefreshCw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Mail, Copy, Shield, Clock, Zap, CheckCircle, RefreshCw, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -30,9 +33,19 @@ const features = [
   },
 ];
 
+const domains = [
+  'tempmail.com',
+  'quickmail.org', 
+  'fastmail.net',
+  'securemail.io'
+];
+
 export default function HomePage() {
   const [generatedEmail, setGeneratedEmail] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [customMode, setCustomMode] = useState(false);
+  const [customUsername, setCustomUsername] = useState('');
+  const [selectedDomain, setSelectedDomain] = useState(domains[0]);
   
   const generateEmail = async () => {
     setIsGenerating(true);
@@ -40,9 +53,17 @@ export default function HomePage() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Use timestamp-based ID to prevent hydration mismatch
-    const timestampId = Date.now().toString(36);
-    const newEmail = `malesngoding${timestampId}@anjay.com`;
+    let newEmail;
+    if (customMode && customUsername.trim()) {
+      // Custom email without unique codes
+      newEmail = `${customUsername.trim()}@${selectedDomain}`;
+    } else {
+      // Random email without unique codes
+      const usernames = ['user', 'temp', 'mail', 'test', 'demo', 'guest'];
+      const randomUsername = usernames[Math.floor(Math.random() * usernames.length)];
+      newEmail = `${randomUsername}@${selectedDomain}`;
+    }
+    
     setGeneratedEmail(newEmail);
     setIsGenerating(false);
     
@@ -103,12 +124,14 @@ export default function HomePage() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={generateEmail} disabled={isGenerating}>
-            {isGenerating ? (
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Mail className="mr-2 h-4 w-4" />
-            )}
+          <Button 
+            size="lg" 
+            onClick={() => {
+              const generator = document.getElementById('generator');
+              generator?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <Mail className="mr-2 h-4 w-4" />
             Generate Email
           </Button>
           <Button variant="outline" size="lg" asChild>
@@ -131,7 +154,56 @@ export default function HomePage() {
               Generate a temporary email address that expires automatically
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Email Generation Mode</Label>
+              <Button 
+                variant={customMode ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setCustomMode(!customMode)}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                {customMode ? 'Custom Mode' : 'Random Mode'}
+              </Button>
+            </div>
+
+            {/* Custom Email Form */}
+            {customMode && (
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Custom Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Enter your preferred username"
+                    value={customUsername}
+                    onChange={(e) => setCustomUsername(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="domain">Select Domain</Label>
+                  <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {domains.map((domain) => (
+                        <SelectItem key={domain} value={domain}>
+                          @{domain}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {customUsername && (
+                  <div className="text-sm text-muted-foreground">
+                    Preview: <span className="font-mono">{customUsername}@{selectedDomain}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Generated Email Display */}
             {generatedEmail ? (
               <Alert className="flex items-start gap-3">
                 <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -141,14 +213,14 @@ export default function HomePage() {
               </Alert>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                Click &quot;Generate Email&quot; to create your temporary email address
+                {customMode ? 'Configure your custom email and click Generate' : 'Click "Generate Email" to create your temporary email address'}
               </div>
             )}
             
             <div className="flex gap-2">
               <Button 
                 onClick={generateEmail} 
-                disabled={isGenerating}
+                disabled={isGenerating || (customMode && !customUsername.trim())}
                 className="flex-1"
               >
                 {isGenerating ? (
@@ -156,7 +228,7 @@ export default function HomePage() {
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
-                {isGenerating ? 'Generating...' : 'Generate New'}
+                {isGenerating ? 'Generating...' : 'Generate Email'}
               </Button>
               
               {generatedEmail && (
@@ -232,12 +304,14 @@ export default function HomePage() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={generateEmail} disabled={isGenerating}>
-            {isGenerating ? (
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Mail className="mr-2 h-4 w-4" />
-            )}
+          <Button 
+            size="lg" 
+            onClick={() => {
+              const generator = document.getElementById('generator');
+              generator?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <Mail className="mr-2 h-4 w-4" />
             Generate Email Now
           </Button>
           <Button variant="outline" size="lg" asChild>
